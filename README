@@ -1,10 +1,430 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-#A Lua tool for minifying and reverse engineering minified Lua code
+local Window = Rayfield:CreateWindow({
+   Name = "COMPKILLER | FRปั้ม",
+   LoadingTitle = "กำลังเปิดสคริป...",
+   LoadingSubtitle = "by ขอบคุณที่มาใช้สคริปผมครับ",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "CompKillerConfig",
+      FileName = "BigHub"
+   }
+})
 
-Usage:
+local MainTab = Window:CreateTab(" ฟังก์ชันหลัก", 4483362458)
+local Tab2 = Window:CreateTab(" ฟังก์ชั่น2", 4483362458)
 
-    lua minify.lua minify INPUTFILE > OUTPUTFILE 
 
-    lua minify.lua unminify INPUTFILE > OUTPUTFILE
+MainTab:CreateSlider({
+   Name = "WalkSpeed Slider",
+   Info = "Adjust player walk speed",
+   Increment = 1,
+   Range = {16, 500},
+   CurrentValue = 16,
+   Flag = "SliderWalkSpeed",
+   Callback = function(Value)
+      local char = game.Players.LocalPlayer.Character
+      local hum = char and char:FindFirstChildOfClass("Humanoid")
+      if hum then
+         hum.WalkSpeed = Value
+      end
+  
+ end,
+})
 
-The purpose of the unminifier is to reverse engineer minified code. It both beautifies the code and renames the variables to descriptive names like "L_42_arg2" which can be easily find-replaced while trying to reverse engineer minified code.
+MainTab:CreateToggle({
+   Name = "JumpPower",
+   CurrentValue = false,
+   Flag = "",
+   Callback = function(Value)
+      local char = game.Players.LocalPlayer.Character
+if char and char:FindFirstChild("Humanoid") then
+   if Value then
+      char.Humanoid.UseJumpPower = true
+      char.Humanoid.JumpPower = 100
+   else
+      char.Humanoid.JumpPower = 50
+   end
+end
+
+    end,
+})
+MainTab:CreateToggle({
+   Name = "Inf Jump",
+   CurrentValue = false,
+   Flag = "TogglrInf Jump",
+   Callback = function(Value)
+       _G.InfJumpActive = Value
+if _G.InfJumpActive and not _G.InfJumpLoaded then
+   _G.InfJumpLoaded = true
+   game:GetService("UserInputService").JumpRequest:Connect(function()
+      if _G.InfJumpActive then
+         local player = game.Players.LocalPlayer
+         local char = player.Character
+         local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+         if humanoid then
+            humanoid:ChangeState("Jumping")
+         end
+      end
+   end)
+end
+
+ end,
+})
+MainTab:CreateToggle({
+   Name = "Nocilp",
+   CurrentValue = false,
+   Flag = "ToggleNocilp",
+   Callback = function(Value)
+   _G.NoclipActive = Value
+if _G.NoclipActive and not _G.NoclipLoaded then
+   _G.NoclipLoaded = true
+   game:GetService("RunService").Stepped:Connect(function()
+      if _G.NoclipActive then
+         local char = game.Players.LocalPlayer.Character
+         if char then
+            for _, v in pairs(char:GetDescendants()) do
+               if v:IsA("BasePart") then
+                  v.CanCollide = false
+               end
+            end
+         end
+      end
+   end)
+end
+
+end,
+})
+MainTab:CreateToggle({
+   Name = "warp",
+   CurrentValue = false,
+   Flag = "ToggleTPClick",
+   Callback = function(Value)
+       _G.TPClickActive = Value
+if _G.TPClickActive and not _G.TPClickLoaded then
+   _G.TPClickLoaded = true
+   local player = game.Players.LocalPlayer
+   local mouse = player:GetMouse()
+   mouse.Button1Down:Connect(function()
+      if _G.TPClickActive then
+         local char = player.Character
+         if char and mouse.Target then
+            local targetPos = mouse.Hit.p + Vector3.new(0, 3, 0)
+            char:PivotTo(CFrame.new(targetPos))
+         end
+      end
+   end)
+end
+
+end,
+})
+
+MainTab:CreateToggle({
+   Name = "Headlock",
+   CurrentValue = false,
+   Flag ="ToggleAimbotHead",
+   Callback = function(Value)
+      _G.AimbotActive = Value
+if _G.AimbotActive and not _G.AimbotLoaded then
+   _G.AimbotLoaded = true
+   local player = game.Players.LocalPlayer
+   local camera = game.Workspace.CurrentCamera
+   
+   local function getClosestPlayer()
+      local closestPlayer = nil
+      local shortestDistance = math.huge
+      for _, p in pairs(game.Players:GetPlayers()) do
+         if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+            local dist = (player.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
+            if dist < shortestDistance then
+               closestPlayer = p
+               shortestDistance = dist
+            end
+         end
+      end
+      return closestPlayer
+   end
+
+   game:GetService("RunService").RenderStepped:Connect(function()
+      if _G.AimbotActive then
+         local target = getClosestPlayer()
+         if target and target.Character and target.Character:FindFirstChild("Head") then
+            camera.CFrame = CFrame.new(camera.CFrame.Position, target.Character.Head.Position)
+         end
+      end
+   end)
+end
+
+
+end,
+ })
+ 
+Tab2:CreateToggle({
+   Name = "InfCameraZoom",
+   CurrentValue = false,
+   Flag ="ToggleInfCameraZoom",
+   Callback = function(Value)
+     local player = game.Players.LocalPlayer
+if player then
+   if Value then
+      player.CameraMaxZoomDistance = 2000000
+   else
+      player.CameraMaxZoomDistance = 400
+   end
+end
+
+ end,
+})
+
+Tab2:CreateSlider({
+   Name = "FOV",
+   Info = "Adjust your Field of View",
+   Increment = 1,
+   Range = {70, 120},
+   CurrentValue = 70,
+   Flag = "SliderFOV",
+   Callback = function(Value)
+      local camera = game.Workspace.CurrentCamera
+      if camera then
+         camera.FieldOfView = Value
+      end
+ end,
+})
+
+Tab2:CreateToggle({
+   Name = "Fov(120)",
+   CurrentValue = false,
+   Flag = "Toggle120Fov",
+   Callback = function(Value)
+      local camera = game.Workspace.CurrentCamera
+      if camera then
+         if Value then
+            camera.FieldOfView = 120
+         else
+            camera.FieldOfView = 70
+         end
+      end
+ 
+end,
+})
+
+Tab2:CreateToggle({
+   Name = "Player Name ESP",
+   CurrentValue = false,
+   Flag = "ToggleNameESP",
+   Callback = function(Value)
+      _G.NameESPActive = Value
+      
+      
+      local function removeNameEsp()
+         for _, p in pairs(game.Players:GetPlayers()) do
+            if p.Character and p.Character:FindFirstChild("Head") then
+               if p.Character.Head:FindFirstChild("EspNameGui") then
+                  p.Character.Head.EspNameGui:Destroy()
+               end
+            end
+         end
+      end
+
+      if _G.NameESPActive then
+         
+         game:GetService("RunService").Heartbeat:Connect(function()
+            if not _G.NameESPActive then return end
+            
+            for _, p in pairs(game.Players:GetPlayers()) do
+               if p ~= game.Players.LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
+                  local head = p.Character.Head
+                  
+                  
+                  if not head:FindFirstChild("EspNameGui") then
+                     local billboard = Instance.new("BillboardGui")
+                     billboard.Name = "EspNameGui"
+                     billboard.AlwaysOnTop = true 
+                     billboard.Size = UDim2.new(0, 200, 0, 50)
+                     billboard.StudsOffset = Vector3.new(0, 2.5, 0) 
+                     billboard.Parent = head
+                     
+                     local label = Instance.new("TextLabel")
+                     label.Name = "EspNameLabel"
+                     label.Size = UDim2.new(1, 0, 1, 0)
+                     label.BackgroundTransparency = 1 
+                     label.Text = p.Name 
+                     
+                     
+                     label.TextColor3 = Color3.fromRGB(0, 213, 255) 
+                     
+                     label.TextSize = 13
+                     label.Font = Enum.Font.SourceSansBold 
+                     label.TextStrokeTransparency = 0 
+                     label.Parent = billboard
+                  end
+               end
+            end
+         end)
+      else
+         removeNameEsp()
+      end
+   end,
+})
+
+Tab2:CreateToggle({
+   Name = "Hitbox (UI)",
+   CurrentValue = false,
+   Flag = "ToggleHitboxCustomUI",
+   Callback = function(Value)
+      _G.HitboxUIActive = Value
+      
+      
+      local function resetAllHitboxes()
+         for _, p in pairs(game.Players:GetPlayers()) do
+            if p.Character then
+               local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+               if hrp then
+                  hrp.Size = Vector3.new(2, 2, 1)
+                  hrp.Transparency = 1
+                  hrp.CanCollide = true
+               end
+            end
+         end
+      end
+
+     
+      if game.CoreGui:FindFirstChild("HitboxManagerUI") then
+         game.CoreGui.HitboxManagerUI:Destroy()
+      end
+      if _G.HitboxCustomLoop then _G.HitboxCustomLoop:Disconnect() end
+      resetAllHitboxes()
+
+      if _G.HitboxUIActive then
+
+
+
+         local ScreenGui = Instance.new("ScreenGui")
+         ScreenGui.Name = "HitboxManagerUI"
+         ScreenGui.Parent = game.CoreGui
+
+         
+         local MainFrame = Instance.new("Frame")
+         MainFrame.Size = UDim2.new(0, 220, 0, 150)
+         MainFrame.Position = UDim2.new(0.5, -110, 0.3, 0)
+         MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+         MainFrame.BorderSizePixel = 0
+         MainFrame.Active = true
+         MainFrame.Draggable = true 
+         MainFrame.Parent = ScreenGui
+
+         local Corner = Instance.new("UICorner")
+         Corner.CornerRadius = UDim.new(0, 10)
+         Corner.Parent = MainFrame
+
+         
+         local Title = Instance.new("TextLabel")
+         Title.Size = UDim2.new(1, -30, 0, 30)
+         Title.Position = UDim2.new(0, 10, 0, 0)
+         Title.Text = "Hitbox Custom UI"
+         Title.TextColor3 = Color3.fromRGB(0, 213, 255)
+         Title.TextSize = 14
+         Title.Font = Enum.Font.SourceSansBold
+         Title.TextXAlignment = Enum.TextXAlignment.Left
+         Title.BackgroundTransparency = 1
+         Title.Parent = MainFrame
+
+         
+         local CloseWindow = Instance.new("TextButton")
+         CloseWindow.Size = UDim2.new(0, 25, 0, 25)
+         CloseWindow.Position = UDim2.new(1, -30, 0, 5)
+         CloseWindow.Text = "X"
+         CloseWindow.TextColor3 = Color3.fromRGB(255, 85, 85)
+         CloseWindow.TextSize = 14
+         CloseWindow.Font = Enum.Font.SourceSansBold
+         CloseWindow.BackgroundTransparency = 1
+         CloseWindow.Parent = MainFrame
+         CloseWindow.MouseButton1Click:Connect(function()
+            ScreenGui:Destroy()
+         end)
+
+       
+         local SizeInput = Instance.new("TextBox")
+         SizeInput.Size = UDim2.new(1, -40, 0, 35)
+         SizeInput.Position = UDim2.new(0, 20, 0, 45)
+         SizeInput.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+         SizeInput.Text = "30" 
+         SizeInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+         SizeInput.TextSize = 14
+         SizeInput.Font = Enum.Font.SourceSans
+         SizeInput.PlaceholderText = "ใส่ขนาดที่นี่ (เช่น 30)..."
+         SizeInput.Parent = MainFrame
+         
+         local InputCorner = Instance.new("UICorner")
+         InputCorner.CornerRadius = UDim.new(0, 5)
+         InputCorner.Parent = SizeInput
+
+         
+         local ActionButton = Instance.new("TextButton")
+         ActionButton.Size = UDim2.new(1, -40, 0, 40)
+         ActionButton.Position = UDim2.new(0, 20, 0, 95)
+         ActionButton.BackgroundColor3 = Color3.fromRGB(255, 85, 85) 
+         ActionButton.Text = "Off"
+         ActionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+         ActionButton.TextSize = 14
+         ActionButton.Font = Enum.Font.SourceSansBold
+         ActionButton.Parent = MainFrame
+
+         local ButtonCorner = Instance.new("UICorner")
+         ButtonCorner.CornerRadius = UDim.new(0, 5)
+         ButtonCorner.Parent = ActionButton
+
+         
+         local ExpanderEnabled = false
+         
+         ActionButton.MouseButton1Click:Connect(function()
+            ExpanderEnabled = not ExpanderEnabled
+            
+            if ExpanderEnabled then
+               ActionButton.BackgroundColor3 = Color3.fromRGB(85, 255, 85) 
+               ActionButton.Text = "Open"
+               
+               
+               _G.HitboxCustomLoop = game:GetService("RunService").RenderStepped:Connect(function()
+                  local targetSize = tonumber(SizeInput.Text) or 30
+                  
+                  for _, p in pairs(game.Players:GetPlayers()) do
+                     if p ~= game.Players.LocalPlayer and p.Character then
+                        local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+                        if hrp then
+                           hrp.Size = Vector3.new(targetSize, targetSize, targetSize)
+                           hrp.Transparency = 0.7
+                           hrp.BrickColor = BrickColor.new("Really blue")
+                           hrp.Material = Enum.Material.Neon
+                           hrp.CanCollide = false
+                        end
+                     end
+                  end
+               end)
+            else
+               ActionButton.BackgroundColor3 = Color3.fromRGB(255, 85, 85) 
+               ActionButton.Text = "Off"
+               
+               if _G.HitboxCustomLoop then _G.HitboxCustomLoop:Disconnect() end
+               resetAllHitboxes()
+            end
+         end)
+      else
+         
+         if game.CoreGui:FindFirstChild("HitboxManagerUI") then
+            game.CoreGui.HitboxManagerUI:Destroy()
+         end
+         if _G.HitboxCustomLoop then _G.HitboxCustomLoop:Disconnect() end
+         resetAllHitboxes()
+      end
+   end,
+})
+
+local SettingTab = Window:CreateTab("⚙️ Settings", 4483362458)
+
+SettingTab:CreateButton({
+   Name = "ปิดเมนู (Destroy UI)",
+   Callback = function()
+      Rayfield:Destroy()
+   end,
+})
