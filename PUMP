@@ -22,6 +22,42 @@ local EventTab   = Window:Tab({ Title = "ยังไม่มี", Icon = "X" }
 local ExtraTab   = Window:Tab({ Title = "ยังไม่มี", Icon = "X" })
 local SettingsTab = Window:Tab({ Title = "ตั้งค่า", Icon = "settings" })
 
+_G.CurrentJump = 50 
+
+local function setCharacterJump(jumpValue)
+    _G.CurrentJump = jumpValue 
+    local player = game.Players.LocalPlayer
+    local char = player.Character
+    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+    
+    if humanoid then
+        
+        humanoid.UseJumpPower = true
+        humanoid.JumpPower = jumpValue 
+    end
+end
+
+
+if _G.JumpConnection then _G.JumpConnection:Disconnect() end
+_G.JumpConnection = game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
+    local humanoid = char:WaitForChild("Humanoid", 5)
+    if humanoid then
+        task.wait(0.5) 
+        humanoid.UseJumpPower = true
+        humanoid.JumpPower = _G.CurrentJump -- คืนค่าความสูงเดิมให้
+    end
+end)
+
+MainMenu:Slider({
+    Title = "JumpPower",
+    Desc = "กระโดดสูง",
+    Value = { Min = 50, Max = 500, Default = 50 }, -- Min: ค่าปกติเกม (50), Max: โดดทะลุเมฆ (500)
+    Callback = function(val)
+        
+        setCharacterJump(val)
+    end
+})
+
 _G.CurrentSpeed = 16 
 
 local function setCharacterSpeed(speedValue)
