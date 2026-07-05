@@ -16,7 +16,7 @@ local Window = WindUI:CreateWindow({
 
 local MainMenu   = Window:Tab({ Title = "เมนูหลัก", Icon = "box" })
 local FarmTab    = Window:Tab({ Title = "มุมมอง", Icon = "eye" })
-local EmoteTab   = Window:Tab({ Title = "ยังไม่มี", Icon = "X" })
+local EmoteTab   = Window:Tab({ Title = "ต่อสู้", Icon = "sword" })
 local ViewTab    = Window:Tab({ Title = "ยังไม่มี", Icon = "X" })
 local EventTab   = Window:Tab({ Title = "ยังไม่มี", Icon = "X" })
 local ExtraTab   = Window:Tab({ Title = "ยังไม่มี", Icon = "X" })
@@ -418,7 +418,7 @@ local function createTeleportUI()
     local Corner1 = Instance.new("UICorner", SaveButton)
     Corner1.CornerRadius = UDim.new(0, 5)
 
-    -- ปุ่มกดวาร์ปกลับ (Teleport)
+    
     local TPButton = Instance.new("TextButton")
     TPButton.Size = UDim2.new(1, -20, 0, 35)
     TPButton.Position = UDim2.new(0, 10, 0, 85)
@@ -488,9 +488,17 @@ _G.HitboxESP = false
 
 local function cleanupHitbox()
     _G.HitboxActive = false
-    if _G.HitboxLoop then _G.HitboxLoop:Disconnect() _G.HitboxLoop = nil end
-    if game.CoreGui:FindFirstChild("PUMP_HitboxUI") then
-        game.CoreGui.PUMP_HitboxUI:Destroy()
+    
+    
+    if _G.HitboxLoop then 
+        _G.HitboxLoop:Disconnect() 
+        _G.HitboxLoop = nil 
+    end
+    
+    
+    local oldUI = game.CoreGui:FindFirstChild("PUMP_HitboxUI")
+    if oldUI then
+        oldUI:Destroy()
     end
     
     
@@ -509,14 +517,15 @@ end
 
 
 local function createHitboxUI()
+    
     cleanupHitbox() 
     _G.HitboxActive = true
 
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "HitboxUI"
+    ScreenGui.Name = "PUMP_HitboxUI"
     ScreenGui.Parent = game.CoreGui
 
-
+    
     local MainFrame = Instance.new("Frame")
     MainFrame.Size = UDim2.new(0, 220, 0, 140)
     MainFrame.Position = UDim2.new(0.3, -110, 0.4, -70)
@@ -532,7 +541,7 @@ local function createHitboxUI()
     
     local Title = Instance.new("TextLabel")
     Title.Size = UDim2.new(1, 0, 0, 30)
-    Title.Text = "Hitbox "
+    Title.Text = "Hitbox"
     Title.TextColor3 = Color3.fromRGB(255, 85, 85)
     Title.TextSize = 14
     Title.Font = Enum.Font.SourceSansBold
@@ -540,6 +549,7 @@ local function createHitboxUI()
     Title.Parent = MainFrame
 
     
+
     local SizeLabel = Instance.new("TextLabel")
     SizeLabel.Size = UDim2.new(1, 0, 0, 20)
     SizeLabel.Position = UDim2.new(0, 0, 0, 35)
@@ -557,7 +567,7 @@ local function createHitboxUI()
     SizeInput.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
     SizeInput.Text = tostring(_G.HitboxSize)
     SizeInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-    SizeInput.PlaceholderText = "พิมพ์ขนาดพิกัด (เช่น 15, 20)..."
+    SizeInput.PlaceholderText = "พิมพ์ขนาด (เช่น 15, 20)..."
     SizeInput.TextSize = 13
     SizeInput.Font = Enum.Font.SourceSansBold
     SizeInput.Parent = MainFrame
@@ -570,7 +580,7 @@ local function createHitboxUI()
     ESPButton.Size = UDim2.new(1, -40, 0, 30)
     ESPButton.Position = UDim2.new(0, 20, 0, 98)
     ESPButton.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-    ESPButton.Text = "เปิดแสงกล่อง ESP (OFF)"
+    ESPButton.Text = "OFF"
     ESPButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     ESPButton.TextSize = 12
     ESPButton.Font = Enum.Font.SourceSansBold
@@ -600,7 +610,7 @@ local function createHitboxUI()
         end
     end)
 
-
+    
     _G.HitboxLoop = game:GetService("RunService").Heartbeat:Connect(function()
         if not _G.HitboxActive then return end
         
@@ -608,12 +618,10 @@ local function createHitboxUI()
             if p ~= game.Players.LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                 local hrp = p.Character.HumanoidRootPart
                 
-                
                 hrp.Size = Vector3.new(_G.HitboxSize, _G.HitboxSize, _G.HitboxSize)
-                hrp.Transparency = 0.7 -- ปรับจาง ๆ ให้เห็นขอบเขตกล่อง
-                hrp.CanCollide = false  -- ไม่ให้พาร์ทขยายไปผลักเรากระเด็น
+                hrp.Transparency = 0.7 
+                hrp.CanCollide = false  
                 
-
                 local selectHighlight = hrp:FindFirstChild("HitboxSelection")
                 if _G.HitboxESP then
                     if not selectHighlight then
@@ -632,9 +640,9 @@ local function createHitboxUI()
     end)
 end
 
-MainMenu:Toggle({
-    Title = "Hitbox",
-    Desc = "ขยายHithox",
+EmoteTab:Toggle({
+    Title = " Hitbox",
+    Desc = "ขยาย Hithox",
     Default = false,
     Callback = function(state)
         if state then
