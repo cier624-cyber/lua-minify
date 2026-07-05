@@ -4,7 +4,7 @@ local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/rel
 
 local Window = WindUI:CreateWindow({
     Title = "PUMP HUB",
-    Icon = "rbxassetid://7733658504",
+    Icon = "swords",
     Author = "By PUMP",
     Folder = "PUMP Hub",
     Size = UDim2.fromOffset(420, 320),
