@@ -1,0 +1,768 @@
+
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+
+local Window = WindUI:CreateWindow({
+    Title = "PUMP HUB",
+    Icon = "rbxassetid://7733658504",
+    Author = "By PUMP",
+    Folder = "PUMP Hub",
+    Size = UDim2.fromOffset(420, 320),
+    Transparent = true,
+    Theme = "Dark",
+    SideBarWidth = 180,
+})
+
+
+local MainMenu   = Window:Tab({ Title = "เมนูหลัก", Icon = "box" })
+local FarmTab    = Window:Tab({ Title = "มุมมอง", Icon = "eye" })
+local EmoteTab   = Window:Tab({ Title = "ยังไม่มี", Icon = "X" })
+local ViewTab    = Window:Tab({ Title = "ยังไม่มี", Icon = "X" })
+local EventTab   = Window:Tab({ Title = "ยังไม่มี", Icon = "X" })
+local ExtraTab   = Window:Tab({ Title = "ยังไม่มี", Icon = "X" })
+local SettingsTab = Window:Tab({ Title = "ตั้งค่า", Icon = "settings" })
+
+_G.CurrentSpeed = 16 
+
+local function setCharacterSpeed(speedValue)
+    _G.CurrentSpeed = speedValue 
+    local player = game.Players.LocalPlayer
+    local char = player.Character
+    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid.WalkSpeed = speedValue 
+    end
+end
+
+
+if _G.SpeedConnection then _G.SpeedConnection:Disconnect() end
+_G.SpeedConnection = game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
+    local humanoid = char:WaitForChild("Humanoid", 5)
+    if humanoid then
+        task.wait(0.5) 
+        humanoid.WalkSpeed = _G.CurrentSpeed -- คืนค่าความเร็วเดิมให้
+    end
+end)
+
+MainMenu:Slider({
+    Title = "ปรับความเร็วการวิ่ง",
+    Value = { Min = 16, Max = 1000, Default = 16 },
+    Callback = function(val)
+  
+        setCharacterSpeed(val)
+    end
+})
+
+local function cleanupStdFly()
+    if _G.StdFlyLoop then _G.StdFlyLoop:Disconnect() _G.StdFlyLoop = nil end
+    local player = game.Players.LocalPlayer
+    local char = player.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    local animate = char and char:FindFirstChild("Animate")
+    
+    if _G.StdFlyBV then _G.StdFlyBV:Destroy() _G.StdFlyBV = nil end
+    if _G.StdFlyBG then _G.StdFlyBG:Destroy() _G.StdFlyBG = nil end
+    
+    if animate then animate.Disabled = false end
+    if hum then hum:ChangeState("GettingUp") end
+end
+
+MainMenu:Toggle({
+    Title = "เปิดใช้งานระบบบิน",
+    Desc = "Fly Hub",
+    Default = false,
+    Callback = function(state)
+        if state then
+
+            if game.CoreGui:FindFirstChild("StdFlyManagerUI") then
+                game.CoreGui.StdFlyManagerUI:Destroy()
+            end
+            cleanupStdFly()
+
+            local ScreenGui = Instance.new("ScreenGui")
+            ScreenGui.Name = "StdFlyManagerUI"
+            ScreenGui.Parent = game.CoreGui
+
+            local MainFrame = Instance.new("Frame")
+            MainFrame.Size = UDim2.new(0, 220, 0, 150)
+            MainFrame.Position = UDim2.new(0.5, -110, 0.5, -75)
+            MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+            MainFrame.BorderSizePixel = 0
+            MainFrame.Active = true
+            MainFrame.Draggable = true 
+            MainFrame.Parent = ScreenGui
+
+            local Corner = Instance.new("UICorner", MainFrame)
+            Corner.CornerRadius = UDim.new(0, 10)
+
+            local Title = Instance.new("TextLabel")
+            Title.Size = UDim2.new(1, -30, 0, 30)
+            Title.Position = UDim2.new(0, 10, 0, 0)
+            Title.Text = "Real Fly Hub V4 (Anti-Jitter)"
+            Title.TextColor3 = Color3.fromRGB(0, 213, 255)
+            Title.TextSize = 14
+            Title.Font = Enum.Font.SourceSansBold
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+            Title.BackgroundTransparency = 1
+            Title.Parent = MainFrame
+
+            local SpeedInput = Instance.new("TextBox")
+            SpeedInput.Size = UDim2.new(1, -40, 0, 35)
+            SpeedInput.Position = UDim2.new(0, 20, 0, 45)
+            SpeedInput.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+            SpeedInput.Text = "50" 
+            SpeedInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+            SpeedInput.TextSize = 14
+            SpeedInput.Font = Enum.Font.SourceSans
+            SpeedInput.PlaceholderText = "ใส่ความเร็ว..."
+            SpeedInput.Parent = MainFrame
+            
+            local InputCorner = Instance.new("UICorner", SpeedInput)
+            InputCorner.CornerRadius = UDim.new(0, 5)
+
+            local FlyButton = Instance.new("TextButton")
+            FlyButton.Size = UDim2.new(1, -40, 0, 40)
+            FlyButton.Position = UDim2.new(0, 20, 0, 95)
+            FlyButton.BackgroundColor3 = Color3.fromRGB(255, 85, 85)
+            FlyButton.Text = "เริ่มบิน (OFF)"
+            FlyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            FlyButton.TextSize = 14
+            FlyButton.Font = Enum.Font.SourceSansBold
+            FlyButton.Parent = MainFrame
+
+            local ButtonCorner = Instance.new("UICorner", FlyButton)
+            ButtonCorner.CornerRadius = UDim.new(0, 5)
+
+            local IsFlying = false
+            
+            FlyButton.MouseButton1Click:Connect(function()
+                local player = game.Players.LocalPlayer
+                local char = player.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                local animate = char and char:FindFirstChild("Animate")
+                
+                IsFlying = not IsFlying
+                
+                if IsFlying and hrp and hum then
+                    FlyButton.BackgroundColor3 = Color3.fromRGB(85, 255, 85)
+                    FlyButton.Text = "กำลังบิน (ON)"
+                    
+                    if animate then animate.Disabled = true end
+                    
+                    _G.StdFlyBG = Instance.new("BodyGyro")
+                    _G.StdFlyBG.P = 9e4
+                    _G.StdFlyBG.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+                    _G.StdFlyBG.cframe = hrp.CFrame
+                    _G.StdFlyBG.Parent = hrp
+                    
+                    _G.StdFlyBV = Instance.new("BodyVelocity")
+                    _G.StdFlyBV.velocity = Vector3.new(0, 0, 0)
+                    _G.StdFlyBV.maxForce = Vector3.new(9e9, 9e9, 9e9)
+                    _G.StdFlyBV.Parent = hrp
+                    
+                    _G.StdFlyLoop = game:GetService("RunService").Heartbeat:Connect(function()
+                        if not IsFlying or not char or not hrp or not hum then return end
+                        hum:ChangeState("None")
+                        
+                        local camera = workspace.CurrentCamera
+                        local moveDir = hum.MoveDirection 
+                        local userSpeed = tonumber(SpeedInput.Text) or 50
+                        local actualSpeed = userSpeed * 0.9
+                        
+                        _G.StdFlyBG.cframe = camera.CFrame
+                        
+                        if moveDir.Magnitude > 0 then
+                            local camCFrame = camera.CFrame
+                            local lookVector = camCFrame.LookVector
+                            local rightVector = camCFrame.RightVector
+                            local direction = (lookVector * (moveDir:Dot(lookVector) / lookVector.Magnitude)) + (rightVector * (moveDir:Dot(rightVector) / rightVector.Magnitude))
+                            
+                            if direction.Magnitude > 0 then
+                                _G.StdFlyBV.velocity = direction.Unit * actualSpeed
+                            end
+                        else
+                            _G.StdFlyBV.velocity = Vector3.new(0, 0, 0)
+                        end
+                    end)
+                else
+                    FlyButton.BackgroundColor3 = Color3.fromRGB(255, 85, 85)
+                    FlyButton.Text = "เริ่มบิน (OFF)"
+                    cleanupStdFly()
+                end
+            end)
+        else
+    
+            if game.CoreGui:FindFirstChild("StdFlyManagerUI") then
+                game.CoreGui.StdFlyManagerUI:Destroy()
+            end
+            cleanupStdFly()
+        end
+    end,
+})
+
+local function cleanupInfJump()
+    if _G.InfJumpLoop then 
+        _G.InfJumpLoop:Disconnect() 
+        _G.InfJumpLoop = nil 
+    end
+end
+
+MainMenu:Toggle({
+    Title = "Inf Jump",
+    Desc = "กระโดดไม่จำกัด",
+    Default = false,
+    Callback = function(state)
+        if state then
+            
+            cleanupInfJump()
+            
+            
+            _G.InfJumpLoop = game:GetService("UserInputService").JumpRequest:Connect(function()
+                local player = game.Players.LocalPlayer
+                local char = player.Character
+                local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end)
+        else
+            
+            cleanupInfJump()
+        end
+    end,
+})
+
+local function cleanupNoclip()
+    if _G.NoclipConnection then
+        _G.NoclipConnection:Disconnect()
+        _G.NoclipConnection = nil
+    end
+    local char = game.Players.LocalPlayer.Character
+    if char then
+        for _, v in pairs(char:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.CanCollide = true
+            end
+        end
+    end
+end
+
+MainMenu:Toggle({
+    Title = "Noclip",
+    Desc = "เดินทะลุกำแพง",
+    Default = false,
+    Callback = function(state)
+        
+        _G.NoclipActive = state 
+
+        if _G.NoclipActive then
+
+            cleanupNoclip()
+            
+            
+            _G.NoclipConnection = game:GetService("RunService").Stepped:Connect(function()
+                if not _G.NoclipActive then
+                    cleanupNoclip()
+                    return
+                end
+                
+                local char = game.Players.LocalPlayer.Character
+                if char then
+                    for _, v in pairs(char:GetDescendants()) do
+                        if v:IsA("BasePart") and v.CanCollide == true then
+                            v.CanCollide = false
+                        end
+                    end
+                end
+            end)
+        else
+
+            cleanupNoclip()
+        end
+    end,
+})
+
+local function setCameraZoom(maxDistance)
+    local player = game.Players.LocalPlayer
+    if player then
+        player.CameraMaxZoomDistance = maxDistance
+    end
+end
+
+MainMenu:Toggle({
+    Title = "Infinite Zoom",
+    Desc = "ซูมไม่จำกัด",
+    Default = false,
+    Callback = function(state)
+        if state then
+            
+            setCameraZoom(2000000)
+        else
+            
+            setCameraZoom(400)
+        end
+    end,
+})
+
+local function setCameraFOV(fovValue)
+    local camera = workspace.CurrentCamera
+    if camera then
+        camera.FieldOfView = fovValue
+    end
+end
+
+FarmTab:Toggle({
+    Title = "FOV 120",
+    Desc = "มุมมองกว้าง",
+    Default = false,
+    Callback = function(state)
+        if state then
+            
+            setCameraFOV(120)
+        else
+            
+            setCameraFOV(70)
+        end
+    end,
+})
+
+_G.SavedPosition = nil 
+
+
+local function cleanupTeleportUI()
+    if game.CoreGui:FindFirstChild("PUMP_TeleportUI") then
+        game.CoreGui.PUMP_TeleportUI:Destroy()
+    end
+end
+
+
+local function createTeleportUI()
+    cleanupTeleportUI() 
+
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "PUMP_TeleportUI"
+    ScreenGui.Parent = game.CoreGui
+
+    
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = UDim2.new(0, 200, 0, 130)
+    MainFrame.Position = UDim2.new(0.5, -100, 0.4, -65)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Active = true
+    MainFrame.Draggable = true 
+    MainFrame.Parent = ScreenGui
+
+    local Corner = Instance.new("UICorner", MainFrame)
+    Corner.CornerRadius = UDim.new(0, 8)
+
+    
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, 0, 0, 30)
+    Title.Position = UDim2.new(0, 0, 0, 0)
+    Title.Text = "Teleport "
+    Title.TextColor3 = Color3.fromRGB(0, 213, 255)
+    Title.TextSize = 14
+    Title.Font = Enum.Font.SourceSansBold
+    Title.BackgroundTransparency = 1
+    Title.Parent = MainFrame
+
+    
+    local SaveButton = Instance.new("TextButton")
+    SaveButton.Size = UDim2.new(1, -20, 0, 35)
+    SaveButton.Position = UDim2.new(0, 10, 0, 40)
+    SaveButton.BackgroundColor3 = Color3.fromRGB(35, 40, 50)
+    SaveButton.Text = "Save"
+    SaveButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SaveButton.TextSize = 13
+    SaveButton.Font = Enum.Font.SourceSansBold
+    SaveButton.Parent = MainFrame
+
+    local Corner1 = Instance.new("UICorner", SaveButton)
+    Corner1.CornerRadius = UDim.new(0, 5)
+
+    -- ปุ่มกดวาร์ปกลับ (Teleport)
+    local TPButton = Instance.new("TextButton")
+    TPButton.Size = UDim2.new(1, -20, 0, 35)
+    TPButton.Position = UDim2.new(0, 10, 0, 85)
+    TPButton.BackgroundColor3 = Color3.fromRGB(0, 170, 120)
+    TPButton.Text = "TP"
+    TPButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TPButton.TextSize = 13
+    TPButton.Font = Enum.Font.SourceSansBold
+    TPButton.Parent = MainFrame
+
+    local Corner2 = Instance.new("UICorner", TPButton)
+    Corner2.CornerRadius = UDim.new(0, 5)
+
+    
+    SaveButton.MouseButton1Click:Connect(function()
+        local player = game.Players.LocalPlayer
+        local char = player.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        
+        if hrp then
+            _G.SavedPosition = hrp.CFrame -- บันทึกตำแหน่งและองศาการหันหน้าเอาไว้
+            SaveButton.Text = "✅ บันทึกพิกัดสำเร็จ!"
+            task.wait(1)
+            SaveButton.Text = "บันทึกจุดปัจจุบัน (Save)"
+        end
+    end)
+
+
+    TPButton.MouseButton1Click:Connect(function()
+        local player = game.Players.LocalPlayer
+        local char = player.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        
+        if hrp then
+            if _G.SavedPosition then
+                hrp.CFrame = _G.SavedPosition 
+            else
+                TPButton.Text = "❌ ยังไม่ได้เซฟจุด"
+                TPButton.BackgroundColor3 = Color3.fromRGB(220, 80, 80)
+                task.wait(1.5)
+                TPButton.Text = "วาร์ปกลับจุดที่เซฟ (TP)"
+                TPButton.BackgroundColor3 = Color3.fromRGB(0, 170, 120)
+            end
+        end
+    end)
+end
+
+MainMenu:Toggle({
+    Title = "เปิดเมนูเซฟจุดวาร์ป",
+    Desc = "วาปกลับไปจุดที่เซฟ",
+    Default = false,
+    Callback = function(state)
+        if state then
+            
+            createTeleportUI()
+        else
+       
+            cleanupTeleportUI()
+        end
+    end,
+})
+
+_G.HitboxSize = 2       
+_G.HitboxActive = false 
+_G.HitboxESP = false    
+
+
+local function cleanupHitbox()
+    _G.HitboxActive = false
+    if _G.HitboxLoop then _G.HitboxLoop:Disconnect() _G.HitboxLoop = nil end
+    if game.CoreGui:FindFirstChild("PUMP_HitboxUI") then
+        game.CoreGui.PUMP_HitboxUI:Destroy()
+    end
+    
+    
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= game.Players.LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = p.Character.HumanoidRootPart
+            hrp.Size = Vector3.new(2, 2, 1)
+            hrp.Transparency = 1
+            hrp.CanCollide = true
+            if hrp:FindFirstChild("HitboxSelection") then
+                hrp.HitboxSelection:Destroy()
+            end
+        end
+    end
+end
+
+
+local function createHitboxUI()
+    cleanupHitbox() 
+    _G.HitboxActive = true
+
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "HitboxUI"
+    ScreenGui.Parent = game.CoreGui
+
+
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = UDim2.new(0, 220, 0, 140)
+    MainFrame.Position = UDim2.new(0.3, -110, 0.4, -70)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Active = true
+    MainFrame.Draggable = true 
+    MainFrame.Parent = ScreenGui
+
+    local Corner = Instance.new("UICorner", MainFrame)
+    Corner.CornerRadius = UDim.new(0, 8)
+
+    
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, 0, 0, 30)
+    Title.Text = "Hitbox "
+    Title.TextColor3 = Color3.fromRGB(255, 85, 85)
+    Title.TextSize = 14
+    Title.Font = Enum.Font.SourceSansBold
+    Title.BackgroundTransparency = 1
+    Title.Parent = MainFrame
+
+    
+    local SizeLabel = Instance.new("TextLabel")
+    SizeLabel.Size = UDim2.new(1, 0, 0, 20)
+    SizeLabel.Position = UDim2.new(0, 0, 0, 35)
+    SizeLabel.Text = "ขนาด Hitbox: " .. tostring(_G.HitboxSize)
+    SizeLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    SizeLabel.TextSize = 12
+    SizeLabel.Font = Enum.Font.SourceSans
+    SizeLabel.BackgroundTransparency = 1
+    SizeLabel.Parent = MainFrame
+
+    
+    local SizeInput = Instance.new("TextBox")
+    SizeInput.Size = UDim2.new(1, -40, 0, 30)
+    SizeInput.Position = UDim2.new(0, 20, 0, 60)
+    SizeInput.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+    SizeInput.Text = tostring(_G.HitboxSize)
+    SizeInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SizeInput.PlaceholderText = "พิมพ์ขนาดพิกัด (เช่น 15, 20)..."
+    SizeInput.TextSize = 13
+    SizeInput.Font = Enum.Font.SourceSansBold
+    SizeInput.Parent = MainFrame
+    
+    local InputCorner = Instance.new("UICorner", SizeInput)
+    InputCorner.CornerRadius = UDim.new(0, 5)
+
+    
+    local ESPButton = Instance.new("TextButton")
+    ESPButton.Size = UDim2.new(1, -40, 0, 30)
+    ESPButton.Position = UDim2.new(0, 20, 0, 98)
+    ESPButton.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+    ESPButton.Text = "เปิดแสงกล่อง ESP (OFF)"
+    ESPButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ESPButton.TextSize = 12
+    ESPButton.Font = Enum.Font.SourceSansBold
+    ESPButton.Parent = MainFrame
+
+    local ButtonCorner = Instance.new("UICorner", ESPButton)
+    ButtonCorner.CornerRadius = UDim.new(0, 5)
+
+    
+    SizeInput:GetPropertyChangedSignal("Text"):Connect(function()
+        local num = tonumber(SizeInput.Text)
+        if num then
+            _G.HitboxSize = num
+            SizeLabel.Text = "ขนาด Hitbox: " .. tostring(num)
+        end
+    end)
+
+    
+    ESPButton.MouseButton1Click:Connect(function()
+        _G.HitboxESP = not _G.HitboxESP
+        if _G.HitboxESP then
+            ESPButton.BackgroundColor3 = Color3.fromRGB(0, 170, 120)
+            ESPButton.Text = "เปิดแสงกล่อง ESP (ON)"
+        else
+            ESPButton.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+            ESPButton.Text = "เปิดแสงกล่อง ESP (OFF)"
+        end
+    end)
+
+
+    _G.HitboxLoop = game:GetService("RunService").Heartbeat:Connect(function()
+        if not _G.HitboxActive then return end
+        
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if p ~= game.Players.LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = p.Character.HumanoidRootPart
+                
+                
+                hrp.Size = Vector3.new(_G.HitboxSize, _G.HitboxSize, _G.HitboxSize)
+                hrp.Transparency = 0.7 -- ปรับจาง ๆ ให้เห็นขอบเขตกล่อง
+                hrp.CanCollide = false  -- ไม่ให้พาร์ทขยายไปผลักเรากระเด็น
+                
+
+                local selectHighlight = hrp:FindFirstChild("HitboxSelection")
+                if _G.HitboxESP then
+                    if not selectHighlight then
+                        local box = Instance.new("SelectionBox")
+                        box.Name = "HitboxSelection"
+                        box.Adornee = hrp
+                        box.Color3 = Color3.fromRGB(255, 0, 0)
+                        box.LineThickness = 0.05
+                        box.Parent = hrp
+                    end
+                else
+                    if selectHighlight then selectHighlight:Destroy() end
+                end
+            end
+        end
+    end)
+end
+
+MainMenu:Toggle({
+    Title = "Hitbox",
+    Desc = "ขยายHithox",
+    Default = false,
+    Callback = function(state)
+        if state then
+            
+            createHitboxUI()
+        else
+            
+            cleanupHitbox()
+        end
+    end,
+})
+
+_G.EspActive = false
+
+
+local function cleanupESP()
+    _G.EspActive = false
+    if _G.EspConnection then _G.EspConnection:Disconnect() _G.EspConnection = nil end
+    if _G.EspPlayerAdded then _G.EspPlayerAdded:Disconnect() _G.EspPlayerAdded = nil end
+    
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p.Character then
+            if p.Character:FindFirstChild("PUMP_Highlight") then
+                p.Character.PUMP_Highlight:Destroy()
+            end
+            if p.Character:FindFirstChild("Head") and p.Character.Head:FindFirstChild("PUMP_Billboard") then
+                p.Character.Head.PUMP_Billboard:Destroy()
+            end
+        end
+    end
+end
+
+
+local function applyESP(targetPlayer)
+    if targetPlayer == game.Players.LocalPlayer then return end
+    
+    local function onCharacter(char)
+        if not _G.EspActive or not char then return end
+        
+        
+        if not char:IsDescendantOf(workspace) then
+            char.AncestryChanged:Wait()
+        end
+        task.wait(0.5) 
+        
+        
+        local hl = char:FindFirstChild("PUMP_Highlight")
+        if not hl then
+            hl = Instance.new("Highlight")
+            hl.Name = "PUMP_Highlight"
+            hl.FillColor = Color3.fromRGB(0, 213, 255)  
+            hl.FillTransparency = 0.5                  
+            hl.OutlineColor = Color3.fromRGB(255, 255, 255) 
+            hl.OutlineTransparency = 0                  
+            hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop 
+            hl.Parent = char
+        end
+        
+        
+        local head = char:WaitForChild("Head", 10) -- เพิ่มเวลาส่องหาหัวเป็น 10 วินาทีป้องกันแมพโหลดช้า
+        if head and not head:FindFirstChild("PUMP_Billboard") then
+            local bill = Instance.new("BillboardGui")
+            bill.Name = "PUMP_Billboard"
+            bill.AlwaysOnTop = true
+            bill.Size = UDim2.new(0, 200, 0, 50)
+            bill.StudsOffset = Vector3.new(0, 2.5, 0) 
+            bill.Parent = head
+            
+            local nameLabel = Instance.new("TextLabel")
+            nameLabel.Size = UDim2.new(1, 0, 1, 0)
+            nameLabel.BackgroundTransparency = 1
+            nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            nameLabel.TextSize = 13
+            nameLabel.Font = Enum.Font.SourceSansBold
+            nameLabel.TextStrokeTransparency = 0 
+            nameLabel.Parent = bill
+            
+            
+            task.spawn(function()
+                while _G.EspActive and char and char.Parent and head and head.Parent and hl and hl.Parent do
+                    local localChar = game.Players.LocalPlayer.Character
+                    local localHrp = localChar and localChar:FindFirstChild("HumanoidRootPart")
+                    local hrp = char:FindFirstChild("HumanoidRootPart")
+                    
+                    if hrp and localHrp then
+                        local distance = math.floor((hrp.Position - localHrp.Position).Magnitude)
+                        nameLabel.Text = string.format("%s\n[%d m]", targetPlayer.Name, distance)
+                    else
+                        nameLabel.Text = targetPlayer.Name
+                    end
+                    task.wait(0.3) 
+                end
+            end)
+        end
+    end
+    
+    
+    if targetPlayer.Character then
+        task.spawn(function() onCharacter(targetPlayer.Character) end)
+    end
+    
+    
+    targetPlayer.CharacterAdded:Connect(function(char)
+        task.spawn(function() onCharacter(char) end)
+    end)
+end
+
+
+local function createESP()
+    cleanupESP() 
+    _G.EspActive = true
+    
+    for _, p in pairs(game.Players:GetPlayers()) do
+        applyESP(p)
+    end
+    
+    _G.EspPlayerAdded = game.Players.PlayerAdded:Connect(function(p)
+        applyESP(p)
+    end)
+end
+
+FarmTab:Toggle({
+    Title = "Player ESP",
+    Desc = "มองผู้เล่น",
+    Default = false,
+    Callback = function(state)
+        if state then
+  
+            createESP()
+        else
+            
+            cleanupESP()
+        end
+    end,
+})
+
+_G.OriginalCameraMode = Enum.CameraMode.Classic 
+
+local function setCameraUnlock(enable)
+    local player = game.Players.LocalPlayer
+    local camera = workspace.CurrentCamera
+    
+    if player and camera then
+        if enable then
+            
+            _G.OriginalCameraMode = player.CameraMode
+            player.CameraMode = Enum.CameraMode.Classic
+            camera.CameraType = Enum.CameraType.Custom
+            
+            
+            player.DevEnableMouseLock = true
+        else
+            
+            player.CameraMode = _G.OriginalCameraMode
+        end
+    end
+end
+
+MainMenu:Toggle({
+    Title = "ปลดล็อกมุมกล้อง (Unlock Camera)",
+    Desc = "แก้ทางแมพที่ล็อกมุมมองสายตา ให้กลับมาหมุนและซูมหน้าจอได้อิสระ",
+    Default = false,
+    Callback = function(state)
+        
+        setCameraUnlock(state)
+    end,
+})
