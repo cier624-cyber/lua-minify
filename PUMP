@@ -16,8 +16,8 @@ local Window = WindUI:CreateWindow({
 
 local MainMenu   = Window:Tab({ Title = "เมนูหลัก", Icon = "box" })
 local FarmTab    = Window:Tab({ Title = "มุมมอง", Icon = "eye" })
-local EmoteTab   = Window:Tab({ Title = "ยังไม่มี", Icon = "X" })
-local ViewTab    = Window:Tab({ Title = "ยังไม่มี", Icon = "X" })
+local EmoteTab   = Window:Tab({ Title = "ยังไม่มี", Icon = "eye" })
+local ViewTab    = Window:Tab({ Title = "ยังไม่มี", Icon = "eye" })
 local EventTab   = Window:Tab({ Title = "ยังไม่มี", Icon = "X" })
 local ExtraTab   = Window:Tab({ Title = "ยังไม่มี", Icon = "X" })
 local SettingsTab = Window:Tab({ Title = "ตั้งค่า", Icon = "settings" })
